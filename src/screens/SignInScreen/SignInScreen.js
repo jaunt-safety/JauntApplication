@@ -1,41 +1,67 @@
 import React, {useState} from "react";
-import {View, Text, Image, StyleSheet, useWindowDimensions} from 'react-native';
+import {View, Text, Image, StyleSheet, useWindowDimensions, ActivityIndicator} from 'react-native';
 import Logo from '../../../assets/images/logo.png';
 import CustomInput from "../../components/CustomInput";
 import CustomButton from "../../components/CustomButton";
-import facebook from '../../../assets/images/facebook.png';
-import google from '../../../assets/images/google.png'
+import { SERVER_URL } from "../../constants";
+import ErrorPanel from "../../components/ErrorPanel";
 
 const SignInScreen = ({navigation}) =>{
     const {height} = useWindowDimensions();
-    const [emailId, setEmailId]= useState();
-    const [password, setPassword] = useState();
+    const [errorMessage, setErrorMessage] = useState();
+    const [studentData, setStudentData] = useState({
+        name: '',
+        email: '',
+    })
+    const [loading, setLoading] = useState(false);
     const onSignInPressed = () =>{
-        navigation.navigate("Home");
+        if(studentData.email === '' || studentData.password === '' ){
+            setErrorMessage('All fields are mandatory')
+        }
+        else{
+            setLoading(true)
+            fetch(`${SERVER_URL}/signin`, {
+                    method: 'POST',
+                    headers : {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(studentData)
+                }).then(res => res.json()).then( data => {
+                    setLoading(false)
+                    if(data.error){
+                        setErrorMessage(data.error);
+                   }
+                   else{
+                        navigation.navigate('Home')
+                   }
+                })
+        }
     }
     const onForgotPasswordPressed = () =>{
-        console.warn('Forgot Password');
-    }
-    const onSignInGoogle = () =>{
-        console.warn('Google');
-    }
-    const onSignInFacebook = () =>{
-        console.warn('Facebook');
+       navigation.navigate("MailIdScreen")
     }
     const onSignUp = () =>{
        navigation.navigate("Signup")
     }
     return (
-    <View style={styles.mainview}>
-        <Image source={Logo} style={[styles.logo, {height: height * 0.3}]} />
-        <CustomInput placeholder="Emailid" value={emailId} setValue={setEmailId} />
-        <CustomInput placeholder="Password" value={password} setValue={setPassword} secureTextEntry />
-        <CustomButton text="Sign In" onPress={onSignInPressed} />
-        <CustomButton text="Forgot Password?" onPress={onForgotPasswordPressed} type="textButton" />
-        <CustomButton text="Sign In With Google" onPress={onSignInGoogle} style={{marginVertical:60}} icon={google} />
-        <CustomButton text="Sign In With Facebook" onPress={onSignInFacebook} icon={facebook} />
-        <CustomButton text="Don't have an account? Sign up" onPress={onSignUp} type="textButton" />
-    </View>)
+        <View style={styles.mainview}>
+            {loading ? (
+                <View style={{alignItems : 'center,', justifyContent: 'center', height: '100%'}}>
+                    <ActivityIndicator size="large" color="white" />
+                </View>
+            ) : (
+             <>   
+                <Image source={Logo} style={[styles.logo, {height: height * 0.3}]} />
+                {errorMessage &&  <ErrorPanel message={errorMessage}/>}
+                <CustomInput placeholder="Emailid" setValue={(text)=> setStudentData({...studentData, email: text })} setErrorMessage={setErrorMessage}/>
+                <CustomInput placeholder="Password" setValue={(text)=> setStudentData({...studentData, password: text })} secureTextEntry setErrorMessage={setErrorMessage} />
+                <CustomButton text="Sign In" onPress={onSignInPressed} />
+                <CustomButton text="Forgot Password?" onPress={onForgotPasswordPressed} type="textButton" />
+                <CustomButton text="Don't have an account? Sign up" onPress={onSignUp} type="textButton" />
+            </>
+            )}
+        </View>
+    )
 }
 
 const styles = StyleSheet.create({
@@ -50,6 +76,14 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         padding: 20,
         backgroundColor: 'rgb(100,198,102)',
+    },
+    errorMessage:{
+        color: 'white',
+        fontSize: 15,
+        textAlign: 'center',
+        backgroundColor: 'red',
+        padding: 5,
+        borderRadius: 10
     }
 })
 

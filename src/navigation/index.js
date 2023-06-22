@@ -11,7 +11,6 @@ const Stack = createStackNavigator();
 const screenOptions = { headerShown: false}
 
 const Navigation = () =>{
-    console.log(Stack)
     return(
         <NavigationContainer>
             <Stack.Navigator initialRouteName = "SignIn">

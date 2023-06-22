@@ -1,0 +1,1 @@
+export const SERVER_URL = 'https://5267-146-115-120-225.ngrok-free.app'
